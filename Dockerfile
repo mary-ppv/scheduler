@@ -2,6 +2,11 @@ FROM golang:1.23.2 AS builder
 
 WORKDIR /scheduler
 
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
 COPY . .
 
 RUN go mod tidy

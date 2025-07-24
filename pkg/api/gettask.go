@@ -17,7 +17,7 @@ func GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		SendError(w, err.Error())
+		http.Error(w, "can not get task", http.StatusInternalServerError)
 		return
 	}
 

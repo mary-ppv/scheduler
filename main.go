@@ -17,13 +17,21 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("No .env file found")
+		log.Println("no .env file found")
+		return
 	}
 
 	err = db.Init()
 	if err != nil {
-		log.Printf("Failed to initialize DB: %v", err)
+		log.Printf("failed to initialize DB: %v", err)
+		return
 	}
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Warning: failed to close database: %v", err)
+		}
+	}()
 
 	webDir := "web"
 

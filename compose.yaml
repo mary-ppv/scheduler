@@ -2,9 +2,6 @@ services:
   scheduler:
     build:
       context: .
-      args:
-        TODO_PORT: ${TODO_PORT}
-        TODO_DBFILE: ${TODO_DBFILE}
     ports:
       - "${TODO_PORT}:${TODO_PORT}"
     environment:

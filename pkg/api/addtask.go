@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"final/pkg/db"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -14,7 +15,8 @@ func AddTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
-		SendError(w, "Invalid JSON")
+		SendError(w, "invalid JSON")
+		log.Printf("request structure mismatch: %v", err)
 		return
 	}
 
@@ -31,13 +33,13 @@ func AddTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = db.CheckDate(&task, now)
 	if err != nil {
-		SendError(w, err.Error())
+		http.Error(w, "can not check date", http.StatusInternalServerError)
 		return
 	}
 
 	id, err := db.AddTask(&task)
 	if err != nil {
-		SendError(w, err.Error())
+		http.Error(w, "can not add task", http.StatusInternalServerError)
 		return
 	}
 

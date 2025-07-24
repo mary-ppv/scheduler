@@ -18,7 +18,7 @@ func DoneTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		SendError(w, err.Error())
+		http.Error(w, "can not get task", http.StatusInternalServerError)
 		return
 	}
 
@@ -31,13 +31,13 @@ func DoneTaskHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		now, err := time.Parse("20060102", task.Date)
 		if err != nil {
-			SendError(w, "Неверный формат даты")
+			http.Error(w, "incorrect format of data", http.StatusBadRequest)
 			return
 		}
 
 		nextDateStr, err := db.NextDate(now, task.Date, task.Repeat)
 		if err != nil {
-			SendError(w, err.Error())
+			http.Error(w, "can not get next date", http.StatusInternalServerError)
 			return
 		}
 

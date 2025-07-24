@@ -35,12 +35,12 @@ func SigninHandler(w http.ResponseWriter, r *http.Request) {
 
 	value := os.Getenv("TODO_PASSWORD")
 	if value == "" {
-		SendError(w, "Authentication is not configured")
+		SendError(w, "authentication is not configured")
 		return
 	}
 
 	if password.Password != value {
-		SendError(w, "Неверный пароль")
+		SendError(w, fmt.Sprintf("incorrect password: %d", http.StatusUnauthorized))
 		return
 	}
 

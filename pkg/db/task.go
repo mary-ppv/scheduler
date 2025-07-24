@@ -19,13 +19,7 @@ type Task struct {
 }
 
 func AddTask(task *Task) (int64, error) {
-	db, err := sql.Open("sqlite", "scheduler.db")
-	if err != nil {
-		return 0, err
-	}
-	defer db.Close()
-
-	res, err := db.Exec("INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?)",
+	res, err := DB.Exec("INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?)",
 		task.Date,
 		task.Title,
 		task.Comment,
@@ -43,12 +37,6 @@ func AddTask(task *Task) (int64, error) {
 }
 
 func Tasks(limit int, searchFilter string) ([]*Task, error) {
-	db, err := sql.Open("sqlite", "scheduler.db")
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
 	var rows *sql.Rows
 	var query string
 	var args []interface{}
@@ -66,7 +54,7 @@ func Tasks(limit int, searchFilter string) ([]*Task, error) {
 		args = []interface{}{limit}
 	}
 
-	rows, err = db.Query(query, args...)
+	rows, err := DB.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,15 +84,9 @@ func Tasks(limit int, searchFilter string) ([]*Task, error) {
 }
 
 func GetTask(id string) (*Task, error) {
-	db, err := sql.Open("sqlite", "scheduler.db")
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
 	var task Task
 
-	err = db.QueryRow(`SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`, id).Scan(
+	err := DB.QueryRow(`SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`, id).Scan(
 		&task.ID,
 		&task.Date,
 		&task.Title,
@@ -123,15 +105,9 @@ func GetTask(id string) (*Task, error) {
 }
 
 func UpdateTask(task *Task) error {
-	db, err := sql.Open("sqlite", "scheduler.db")
+	err := CheckDate(task, time.Now())
 	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	err = CheckDate(task, time.Now())
-	if err != nil {
-		return fmt.Errorf("invalid task date: %v", err)
+		return fmt.Errorf("invalid task date: %w", err)
 	}
 
 	var updates []string
@@ -160,7 +136,7 @@ func UpdateTask(task *Task) error {
 
 	id, err := strconv.ParseInt(task.ID, 10, 64)
 	if err != nil {
-		return fmt.Errorf("invalid task ID: %v", err)
+		return fmt.Errorf("invalid task ID: %w", err)
 	}
 	args = append(args, id)
 
@@ -169,7 +145,7 @@ func UpdateTask(task *Task) error {
 		strings.Join(updates, ", "),
 	)
 
-	res, err := db.Exec(query, args...)
+	res, err := DB.Exec(query, args...)
 	if err != nil {
 		return fmt.Errorf("failed to execute update query: %w", err)
 	}
@@ -187,22 +163,16 @@ func UpdateTask(task *Task) error {
 }
 
 func DeleteTask(id string) error {
-	db, err := sql.Open("sqlite", "scheduler.db")
-	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
-	}
-	defer db.Close()
-
 	if id == "" || id == "nil" {
 		return fmt.Errorf("empty id")
 	}
 
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		return fmt.Errorf("invalid task ID: %v", err)
+		return fmt.Errorf("invalid task ID: %w", err)
 	}
 
-	res, err := db.Exec("DELETE FROM scheduler WHERE id = ?", idInt)
+	res, err := DB.Exec("DELETE FROM scheduler WHERE id = ?", idInt)
 	if err != nil {
 		return fmt.Errorf("failed to delete task: %w", err)
 	}
@@ -220,23 +190,17 @@ func DeleteTask(id string) error {
 }
 
 func UpdateDate(next string, id string) error {
-	db, err := sql.Open("sqlite", "scheduler.db")
-	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
-	}
-	defer db.Close()
-
 	idInt, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		return fmt.Errorf("invalid task ID: %v", err)
+		return fmt.Errorf("invalid task ID: %w", err)
 	}
 
 	date, err := time.Parse("20060102", next)
 	if err != nil {
-		return fmt.Errorf("invalid date format: %v", err)
+		return fmt.Errorf("invalid date format: %w", err)
 	}
 
-	_, err = db.Exec("UPDATE scheduler SET date = ? WHERE id = ?", date.Format("20060102"), idInt)
+	_, err = DB.Exec("UPDATE scheduler SET date = ? WHERE id = ?", date.Format("20060102"), idInt)
 	if err != nil {
 		return fmt.Errorf("failed to update task date: %w", err)
 	}

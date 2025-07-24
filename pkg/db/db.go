@@ -8,6 +8,8 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+var DB *sql.DB
+
 func Init() error {
 	dbFile := os.Getenv("TODO_DBFILE")
 
@@ -15,20 +17,19 @@ func Init() error {
 		dbFile = "scheduler.db"
 	}
 
-	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
-		fmt.Println("Database file does not exist")
-	} else if err != nil {
-		return err
-	}
-
-	db, err := sql.Open("sqlite", dbFile)
+	var err error
+	DB, err := sql.Open("sqlite", dbFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open database: %w", err)
 	}
 
 	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
-		createTable(db)
+		fmt.Printf("database file %s does not exist, will be created\n", dbFile)
+	} else if err != nil {
+		return fmt.Errorf("error checking database file: %w", err)
 	}
+
+	createTable(DB)
 
 	return nil
 }
@@ -48,7 +49,14 @@ func createTable(db *sql.DB) {
 	for _, query := range queries {
 		_, err := db.Exec(query)
 		if err != nil {
-			fmt.Printf("failed to execute query: %v", err)
+			fmt.Printf("failed to execute query: %w", err)
 		}
 	}
+}
+
+func Close() error {
+	if DB != nil {
+		return DB.Close()
+	}
+	return nil
 }
