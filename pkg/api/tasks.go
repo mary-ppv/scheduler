@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"final/pkg/db"
-	"fmt"
 	"net/http"
 )
 
@@ -24,7 +23,7 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 	limit := 50
 	tasks, err := db.Tasks(limit, searchFilter)
 	if err != nil {
-		SendError(w, fmt.Sprintf("failed to get tasks: %v", err))
+		SendError(w, "failed to get tasks", http.StatusInternalServerError)
 		return
 	}
 

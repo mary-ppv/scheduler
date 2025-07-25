@@ -18,7 +18,7 @@ func Init() error {
 	}
 
 	var err error
-	DB, err := sql.Open("sqlite", dbFile)
+	DB, err = sql.Open("sqlite", dbFile)
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
@@ -49,7 +49,7 @@ func createTable(db *sql.DB) {
 	for _, query := range queries {
 		_, err := db.Exec(query)
 		if err != nil {
-			fmt.Printf("failed to execute query: %w", err)
+			fmt.Printf("failed to execute query: %v", err)
 		}
 	}
 }

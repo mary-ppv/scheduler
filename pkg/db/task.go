@@ -37,6 +37,10 @@ func AddTask(task *Task) (int64, error) {
 }
 
 func Tasks(limit int, searchFilter string) ([]*Task, error) {
+	if DB == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
 	var rows *sql.Rows
 	var query string
 	var args []interface{}

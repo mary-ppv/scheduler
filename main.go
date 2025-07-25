@@ -27,12 +27,6 @@ func main() {
 		return
 	}
 
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("Warning: failed to close database: %v", err)
-		}
-	}()
-
 	webDir := "web"
 
 	value := os.Getenv("TODO_PORT")
@@ -42,7 +36,7 @@ func main() {
 
 	addr := ":" + value
 
-	fmt.Println("Server started on port :7540")
+	fmt.Println("server started on port :7540")
 
 	http.Handle("/", http.FileServer(http.Dir(webDir)))
 

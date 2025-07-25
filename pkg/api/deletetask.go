@@ -4,23 +4,35 @@ import (
 	"encoding/json"
 	"final/pkg/db"
 	"net/http"
+	"strconv"
 )
 
 func DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		SendError(w, "can not get id")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "task id is required"})
 		return
 	}
 
-	err := db.DeleteTask(id)
+	_, err := strconv.Atoi(id)
 	if err != nil {
-		SendError(w, err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid task id"})
+		return
+	}
+
+	err = db.DeleteTask(id)
+	if err != nil {
+		if err.Error() == "task not found" {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{})
+	json.NewEncoder(w).Encode(map[string]interface{}{})
 }

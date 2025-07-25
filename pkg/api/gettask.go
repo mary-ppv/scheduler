@@ -11,13 +11,13 @@ func GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		SendError(w, "can not get id")
+		SendError(w, "can not get id", http.StatusBadRequest)
 		return
 	}
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		http.Error(w, "can not get task", http.StatusInternalServerError)
+		SendError(w, "can not get task", http.StatusInternalServerError)
 		return
 	}
 

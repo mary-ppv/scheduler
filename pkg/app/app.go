@@ -9,10 +9,11 @@ import (
 )
 
 func Init() {
+	http.HandleFunc("/api/task/done", server.AuthMiddleware((api.DoneTaskHandler)))
 	http.HandleFunc("/api/nextdate", db.NextDateHandler)
+
 	http.HandleFunc("/api/task", server.AuthMiddleware((api.TaskHandler)))
 	http.HandleFunc("/api/tasks", server.AuthMiddleware((api.TasksHandler)))
-	http.HandleFunc("/api/task/done", server.AuthMiddleware((api.DoneTaskHandler)))
-	http.HandleFunc("/api/task/delete", api.DeleteTaskHandler)
-	http.HandleFunc("/api/signin", server.AuthMiddleware((api.SigninHandler)))
+
+	http.HandleFunc("/api/signin", server.SignInHandler)
 }

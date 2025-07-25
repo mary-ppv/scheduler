@@ -12,38 +12,38 @@ func DoneTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		SendError(w, "field id is empty")
+		SendError(w, "field id is empty", http.StatusBadRequest)
 		return
 	}
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		http.Error(w, "can not get task", http.StatusInternalServerError)
+		SendError(w, "can not get task", http.StatusInternalServerError)
 		return
 	}
 
 	if task.Repeat == "" {
 		err = db.DeleteTask(id)
 		if err != nil {
-			SendError(w, err.Error())
+			SendError(w, "can not delete task", http.StatusInternalServerError)
 			return
 		}
 	} else {
 		now, err := time.Parse("20060102", task.Date)
 		if err != nil {
-			http.Error(w, "incorrect format of data", http.StatusBadRequest)
+			SendError(w, "incorrect format of data", http.StatusBadRequest)
 			return
 		}
 
 		nextDateStr, err := db.NextDate(now, task.Date, task.Repeat)
 		if err != nil {
-			http.Error(w, "can not get next date", http.StatusInternalServerError)
+			SendError(w, "incorrect format of data", http.StatusBadRequest)
 			return
 		}
 
 		err = db.UpdateDate(nextDateStr, id)
 		if err != nil {
-			SendError(w, err.Error())
+			SendError(w, "can not update date", http.StatusInternalServerError)
 			return
 		}
 	}

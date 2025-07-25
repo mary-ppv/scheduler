@@ -12,43 +12,45 @@ import (
 func AddTaskHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
+		return
+	}
+
 	var task db.Task
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
-		SendError(w, "invalid JSON")
+		SendError(w, "invalid JSON", http.StatusBadRequest)
 		log.Printf("request structure mismatch: %v", err)
 		return
 	}
 
 	if task.Title == "" {
-		SendError(w, "title is empty")
+		SendError(w, "title is required", http.StatusBadRequest)
 		return
 	}
 
 	now := time.Now()
 
-	if task.Date == "today" {
-		task.Date = now.Format("20060102")
-	}
-
-	err = db.CheckDate(&task, now)
-	if err != nil {
-		http.Error(w, "can not check date", http.StatusInternalServerError)
+	if err := db.CheckDate(&task, now); err != nil {
+		SendError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	id, err := db.AddTask(&task)
 	if err != nil {
-		http.Error(w, "can not add task", http.StatusInternalServerError)
+		SendError(w, "failed to add task", http.StatusInternalServerError)
+		log.Printf("database error: %v", err)
 		return
 	}
 
-	idStr := strconv.Itoa(int(id))
-	response := map[string]string{"id": idStr}
-	json.NewEncoder(w).Encode(response)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"id": strconv.FormatInt(id, 10)})
 }
 
-func SendError(w http.ResponseWriter, message string) {
-	w.WriteHeader(http.StatusBadRequest)
+func SendError(w http.ResponseWriter, message string, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }

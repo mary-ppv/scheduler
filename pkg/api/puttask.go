@@ -13,30 +13,30 @@ func PutTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		SendError(w, "failed to read request body")
+		SendError(w, "failed to read request body", http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
 	var task db.Task
 	if err := json.Unmarshal(body, &task); err != nil {
-		SendError(w, fmt.Sprintf("invalid JSON: %v", err))
+		SendError(w, fmt.Sprintf("invalid JSON: %v", err), http.StatusBadRequest)
 		return
 	}
 
 	if task.ID == "" {
-		SendError(w, "ID is required")
+		SendError(w, "ID is required", http.StatusBadRequest)
 		return
 	}
 
 	if task.Title == "" {
-		SendError(w, "title is required")
+		SendError(w, "title is required", http.StatusBadRequest)
 		return
 	}
 
 	err = db.UpdateTask(&task)
 	if err != nil {
-		SendError(w, err.Error())
+		SendError(w, "can not update task", http.StatusInternalServerError)
 		return
 	}
 
